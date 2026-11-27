@@ -1,0 +1,40 @@
+name: Pruebas del sistema concurrente
+
+# Ejecutar cuando se suben cambios a main.
+on:
+  push:
+    branches: [main]
+  # Permite ejecutar el proceso manualmente.
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Descarga los archivos del repositorio.
+      - name: Obtener proyecto
+        uses: actions/checkout@v6
+
+      # Configura Java 21.
+      - name: Configurar Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # Compila todos los archivos Java.
+      - name: Compilar proyecto
+        run: |
+          mkdir -p out
+          javac -d out *.java
+
+      # Ejecuta las pruebas automáticas.
+      - name: Ejecutar pruebas
+        run: java -cp out PruebaVentaEntradas
+
+      # Comprueba la ejecución del programa principal.
+      - name: Ejecutar simulacion
+        run: java -cp out Main
