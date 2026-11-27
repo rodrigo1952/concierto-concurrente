@@ -1,11 +1,18 @@
 // Clase que administra las entradas del concierto.
+// Es el RECURSO COMPARTIDO por todos los compradores.
 public class VentaEntradas {
 
-    // Cantidad de entradas disponibles.
+    // Cantidad de entradas disponibles para la venta.
     private int entradasDisponibles;
 
-    // Cantidad de entradas vendidas.
+    // Entradas vendidas netas (compras menos cancelaciones).
     private int entradasVendidas;
+
+    // Total de compras realizadas, incluidas las que luego se cancelaron.
+    private int comprasRealizadas;
+
+    // Total de entradas devueltas mediante cancelación.
+    private int entradasCanceladas;
 
     // Constructor.
     public VentaEntradas(int cantidad) {
@@ -19,11 +26,13 @@ public class VentaEntradas {
 
         this.entradasDisponibles = cantidad;
         this.entradasVendidas = 0;
+        this.comprasRealizadas = 0;
+        this.entradasCanceladas = 0;
     }
 
-    // Método sincronizado para comprar una entrada.
-    // Solo un hilo puede ejecutar este método
-    // a la vez sobre el mismo objeto VentaEntradas.
+    // Compra una entrada.
+    // synchronized: solo un hilo a la vez puede comprobar
+    // el stock y descontarlo sobre el mismo objeto.
     public synchronized boolean comprarEntrada() {
 
         // Si no hay entradas, la compra no se realiza.
@@ -31,11 +40,26 @@ public class VentaEntradas {
             return false;
         }
 
-        // Descontamos una entrada disponible.
         entradasDisponibles--;
-
-        // Registramos una venta exitosa.
         entradasVendidas++;
+        comprasRealizadas++;
+
+        return true;
+    }
+
+    // Cancela una compra: la entrada vuelve al stock.
+    // synchronized: evita que una cancelación y una compra
+    // modifiquen el stock al mismo tiempo.
+    public synchronized boolean cancelarCompra() {
+
+        // No se puede cancelar si no hay entradas vendidas.
+        if (entradasVendidas == 0) {
+            return false;
+        }
+
+        entradasVendidas--;
+        entradasDisponibles++;
+        entradasCanceladas++;
 
         return true;
     }
@@ -45,8 +69,18 @@ public class VentaEntradas {
         return entradasDisponibles;
     }
 
-    // Consulta segura de las entradas vendidas.
+    // Consulta segura de las ventas netas.
     public synchronized int getEntradasVendidas() {
         return entradasVendidas;
+    }
+
+    // Consulta segura del total de compras realizadas.
+    public synchronized int getComprasRealizadas() {
+        return comprasRealizadas;
+    }
+
+    // Consulta segura del total de entradas canceladas.
+    public synchronized int getEntradasCanceladas() {
+        return entradasCanceladas;
     }
 }
